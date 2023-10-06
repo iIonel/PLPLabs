@@ -1,0 +1,27 @@
+Inductive Day := Monday | Tuesday | Wednesday.
+Print Day.
+
+Definition equal (d1 d2: Day) : bool :=
+  match d1, d2 with 
+  | Monday , Monday => true
+  | Tuesday, Tuesday => true
+  | Wednesday, Wednesday => true
+  | _ , _ => false
+  end.
+
+(* testing *)
+Compute (equal Monday Monday).
+Compute (equal Monday Tuesday).
+
+(* verification *)
+Lemma equal_is_correct :
+  forall (d1 d2 : Day),
+    d1 = d2 <-> equal d1 d2 = true.
+Proof.
+  intros d1 d2.
+  split.
+  - intros H.
+    destruct d1, d2; try reflexivity; inversion H.
+  - intros H.
+    destruct d1, d2; try reflexivity; discriminate H.
+Qed.
