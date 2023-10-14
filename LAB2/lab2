@@ -1,0 +1,69 @@
+(*Definiți o funcție care returnează ziua următoare.*)
+Inductive Day := 
+  Monday 
+| Tuesday 
+| Wednesday 
+| Thursday
+| Friday
+| Saturday
+| Sunday.
+
+Definition next(day: Day): Day :=
+  match day with 
+  | Monday => Tuesday
+  | Tuesday => Wednesday
+  | Wednesday => Thursday
+  | Thursday => Friday
+  | Friday => Saturday
+  | Saturday => Sunday
+  | Sunday => Monday
+  end.
+
+Compute(next Sunday).
+
+(*Definiți tipul de date boolean.*)
+Inductive Bool := TT|FF.
+Print Bool.
+
+(*Definiți funcțiile: negație, conjuncție, disjuncție peste *)
+(*tipul de date boolean definit la exercițiul precedent.*)
+Definition negatie(bool : Bool): Bool :=
+  match bool with 
+  | TT => FF
+  | FF => TT
+  end.
+
+Definition conjunctie(b1 b2: Bool): Bool :=
+  match b1, b2 with
+  | TT, TT => TT
+  | TT, FF => FF
+  | FF, TT => FF
+  | FF, FF => FF
+  end.
+
+Definition disjunctie(b1 b2: Bool): Bool :=
+  match b1, b2 with
+  | TT, TT => TT
+  | TT, FF => TT
+  | FF, TT => TT
+  | FF, FF => FF
+  end.
+
+Compute(negatie TT).
+Compute(conjunctie TT TT).
+Compute(conjunctie TT FF).
+Compute(disjunctie TT FF).
+Compute(disjunctie FF FF).
+
+
+(*Definiți un tip de date care simulează numere naturale *)
+(*reprezentate pe 8 biți. Pentru acest tip de date scrieți *)
+(*funcții pentru adunare, scădere, înmulțire, împărțire întreagă și *)
+(*restul împărțirii (modulo). Identificați pentru fiecare funcție cazurile*)
+(*de excepție (de exemplu, scăderi care dau valori negative, împărțiri la zero) *)
+(*și stabiliți niște convenții pentru acele cazuri (de exemplu, pot sa returnez*)
+(*mereu zero atunci când o scădere returnează o valoare negativă).*)
+
+
+
+
