@@ -1,0 +1,48 @@
+Require Import Nat.
+Require Import List.
+Import ListNotations.
+(*Check max.*)
+
+(*EX1*)
+Inductive binar : Type :=
+| frunza : nat -> binar 
+| nod : binar  -> binar -> binar
+| vid : binar.
+
+(*EX2*)
+Fixpoint size (n: binar) : nat :=
+  match n with
+| frunza _=> 1
+| nod stanga dreapta =>  size stanga + size dreapta
+| vid => 0
+  end.
+
+(*EX3*)
+Fixpoint height (n: binar) : nat :=
+  match n with
+| frunza _=> 0
+| nod stanga dreapta => 1 + max(height stanga) (height dreapta)
+| vid => 0
+  end.
+(*MERGE DOAR DACA ESTE ARBORE CU HEIGHT >= 1 ALTFEL TB LA FRUNZA _ => 1*)
+
+Definition arb: binar :=
+nod (frunza 3) (nod (frunza 2) (frunza 1)).
+
+(*EX4*)
+
+(*EX5*)
+Fixpoint flatten {A : Type} (t : binar) (f : nat -> A) : list A :=
+  match t with
+  | frunza x => [f x]
+  | nod n m => flatten n f ++ flatten m f
+  | vid => []
+  end.
+
+Compute size arb. 
+Compute height arb. 
+Compute flatten arb (fun x => x).
+
+
+
+
