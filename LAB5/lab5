@@ -1,0 +1,123 @@
+Require Import String.
+(* Check "a". throws 'Error: No interpretation for string "a".' *)
+Open Scope string_scope.
+
+(*EX1*)
+Inductive AExp: Type:=
+| num : nat -> AExp
+| var : string -> AExp
+| add : AExp -> AExp -> AExp
+| sub : AExp -> AExp -> AExp
+| div : AExp -> AExp -> AExp.
+
+Coercion num : nat >-> AExp.
+Coercion var : string >-> AExp.
+
+Notation "a +' b" := (add a b) (at level 50, left associativity).
+Notation "a -' b" := (sub a b) (at level 50, left associativity).
+Notation "a /' b" := (div a b) (at level 40, left associativity).
+
+Check (add (num 2) (add (var "x") (div (num 2) (var "y")))).
+Check (add 2 (add "x" (div 2 "y"))).
+
+Set Printing Coercions.
+Check (add 2 (add "x" (div 2 "y"))).
+Unset Printing Coercions.
+
+Check 2 +' ("x" +' 2 /' "y").
+Set Printing All.
+Check 2 -' ("x" +' 2 /' "y").
+Check 2 -' "x" /' "y".
+Check "x" /' "y" +' 2.
+Check "x" /' "y" /' "z".
+Unset Printing All.
+
+(*EX2*)
+Inductive Cond :=
+| base : bool -> Cond
+| bnot : Cond -> Cond
+| beq  : AExp -> AExp -> Cond
+| less : AExp -> AExp -> Cond
+| band : Cond -> Cond -> Cond.
+
+Coercion base : bool >-> Cond.
+
+Notation "a <' b" := (less a b) (at level 40).
+Notation "a =' b" := (beq a b) (at level 50).
+Notation "! a" := (bnot a) (at level 75).
+Notation "a &' b" := (band a b) (at level 80).
+Notation "a |' b" := (bnot (band (bnot a) (bnot b))) (at level 85).
+Notation "a >' b" := (less b a) (at level 40).
+Notation "a <=' b" := (band (less a b) (beq a b)) (at level 40).
+Notation "a >=' b" := (band (less b a) (beq a b)) (at level 40).
+
+Check "x" <' "y".
+Check "x" =' "y".
+Check ! "x" =' "y".
+Check "x" <' "y" &' "x" =' "y".
+Check "x" <' "y" |' "x" =' "y".
+Check "x" >' "y" |' "x" =' "y".
+Check "x" >' "y".
+Check 2 >' "y".
+Check 3 >' "y".
+Check "x" <=' "y".
+Check 3 <=' "y".
+Check 2 <=' "y".
+Check "x" >=' "y".
+Check 2 >=' "y".
+Check 1 >=' "y".
+Check !(! "x" <' "y" &' ! "x" =' "y").
+Check ("x" <' "y" |' "x" =' "y") .
+
+(*EX3*)
+Inductive Stmt :=
+| skip : Stmt
+| assign : string -> AExp -> Stmt
+| seq : Stmt -> Stmt -> Stmt
+| ite : Cond -> Stmt -> Stmt -> Stmt
+| while : Cond -> Stmt -> Stmt.
+
+(*EX4*)
+
+Notation "a ::= b" := (assign a b) (at level 90).
+Notation "s1 ;; s2" := (seq s1 s2) (at level 99). 
+
+Definition compute_modulo (x y : string) :=
+  "m" ::= 0 ;;
+   while (x >' y) (
+      x ::= x -' y
+   );;
+   ite (x =' y) ("m" ::= 0) ("m" ::= x) ;;
+   "result" ::= "m".
+
+Definition is_even (x : string) :=
+  ite (x /' 2 =' 0) ("is_even" ::= 1) ("is_even" ::= 0).
+
+
+(*EX5*)
+Definition euclid (a b : string) :=
+ "temp" ::= 0 ;;
+  while(! (a =' b)) (
+    ite (a >' b) (a ::= a -'b) (b ::= b -' a) ;;
+    "temp" ::= a
+  ) ;;
+  "gcd" ::= "temp".
+
+(*EX6*)
+Definition fibo(a : string) :=
+  "fib" ::= 0 ;;
+  "current" ::= 1 ;;
+  while (!(a =' 0))(
+    "aux" ::= "fib" ;;    
+    "fib" ::= "fib" +' "current" ;;
+    "current" ::= "aux" ;;
+    a ::= a -' 1 
+  ) ;;
+  "result" ::= "fib".
+
+
+  
+
+
+
+
