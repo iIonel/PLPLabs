@@ -1,0 +1,104 @@
+Require Import Nat.
+Require Import String.
+
+(*EX1*)
+Inductive AExp :=
+| num : nat -> AExp
+| var : string -> AExp
+| add : AExp -> AExp -> AExp
+| sub : AExp -> AExp -> AExp
+| div : AExp -> AExp -> AExp.
+
+Definition add_option (m n : option nat) : option nat :=
+  match m, n with
+  | Some m', Some n' => Some (m' + n')
+  | _, _ => None
+  end.
+
+Definition sub' (m n : nat) : option nat :=
+  if Nat.ltb m n then None else Some (m - n).
+
+Definition sub_option (m n : option nat) : option nat :=
+  match m, n with
+  | Some m', Some n' => sub' m' n'
+  | _, _ => None
+  end.
+
+Definition div_option (m n : option nat) : option nat :=
+  match m, n with
+  | Some m', Some n' =>
+    if n' =? 0 then None
+    else Some (m' / n')
+  | _, _ => None
+  end.
+
+Definition Env := string -> nat.
+
+Fixpoint aeval (a : AExp) (sigma : Env) : option nat :=
+  match a with
+  | num n => Some n
+  | var x => Some (sigma x)
+  | add a1 a2 => add_option (aeval a1 sigma) (aeval a2 sigma)
+  | sub a1 a2 => sub_option (aeval a1 sigma) (aeval a2 sigma)
+  | div a1 a2 => div_option (aeval a1 sigma) (aeval a2 sigma)
+  end.
+
+Check option.
+Check option nat.
+Print option.
+Check (Some 2).
+Check None.
+
+Compute aeval (add (num 1) (num 5)).
+Compute aeval (div (num 11) (num 2)).
+Compute aeval (sub (num 3) (num 5)).
+
+(*EX2
+Inductive Cond :=
+| base : bool -> Cond
+| bnot : Cond -> Cond
+| beq  : AExp -> AExp -> Cond
+| less : AExp -> AExp -> Cond
+| band : Cond -> Cond -> Cond.
+
+Inductive Stmt :=
+| skip : Stmt 
+| assign : string -> Exp -> Stmt
+| seq : Stmt -> Stmt -> Stmt
+| ite : Cond -> Stmt -> Stmt -> Stmt (* if-then-else *)
+| while : Cond -> Stmt -> Stmt.
+*)
+
+(*EX3*)
+Inductive Logic :=
+| boolean : bool -> Logic
+| istrue : Logic
+| isfalse : Logic
+| not : Logic -> Logic
+| and : Logic -> Logic -> Logic
+| or : Logic -> Logic -> Logic
+| imp : Logic -> Logic -> Logic.
+
+
+Fixpoint evalLogic (l : Logic) (env : Env) : bool :=
+  match l with
+  | boolean b => b
+  | istrue => true
+  | isfalse => false
+  | not b' => negb (evalLogic b' env)
+  | and b1 b2 => andb (evalLogic b1 env) (evalLogic b2 env)
+  | or b1 b2 => orb (evalLogic b1 env) (evalLogic b2 env)
+  | imp b1 b2 => orb (negb (evalLogic b1 env)) (evalLogic b2 env)
+  end.
+
+Compute evalLogic (boolean true).
+Compute evalLogic isfalse. 
+Compute evalLogic (not (boolean true)).
+Compute evalLogic (and (boolean true) (boolean true)). 
+Compute evalLogic (and (boolean false) (boolean true)). 
+Compute evalLogic (or (boolean false) (boolean false)).
+Compute evalLogic (or (boolean false) (boolean true)).
+Compute evalLogic (imp (boolean true) (boolean false)).
+
+
+
