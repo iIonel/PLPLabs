@@ -1,0 +1,133 @@
+Require Import Nat.
+Require Import String.
+
+Inductive Exp :=
+| num : nat -> Exp
+| var : string -> Exp
+| add : Exp -> Exp -> Exp
+| sub : Exp -> Exp -> Exp
+| div : Exp -> Exp -> Exp.
+Inductive Cond :=
+| base : bool -> Cond
+| bnot : Cond -> Cond
+| beq  : Exp -> Exp -> Cond 
+| less : Exp -> Exp -> Cond
+| bor : Cond -> Cond -> Cond.
+Inductive Stmt :=
+| skip : Stmt 
+| assign : string -> Exp -> Stmt
+| seq : Stmt -> Stmt -> Stmt
+| ite : Cond -> Stmt -> Stmt -> Stmt (* if-then-else *)
+| it  : Cond -> Stmt -> Stmt (* if-then *)
+| dowhile : Stmt -> Cond -> Stmt.
+
+
+(*EX1*)
+Fixpoint exp (e : Exp) (env : string -> nat) : nat :=
+  match e with
+  | num n => n
+  | var x => env x
+  | add a1 a2 => (exp a1 env) + (exp a2 env)
+  | sub a1 a2 => 
+       match Nat.leb (exp a2 env) (exp a1 env) with
+      | true => (exp a1 env) - (exp a2 env)
+      | false => 0
+      end
+  | div a1 a2 => 
+      match (exp a2 env) with
+      | 0 => 0 
+      | n => (exp a1 env) / n
+      end
+  end.
+
+Example add_1 : exp (add (num 1) (num 2)) (fun _ => 0) = 3.
+Proof. reflexivity. Qed.
+
+Example add_2 : exp (add (num 0) (num 0)) (fun _ => 0) = 0.
+Proof. reflexivity. Qed.
+
+Example sub_1 : exp (sub (num 10) (num 3)) (fun _ => 0) = 7.
+Proof. reflexivity. Qed.
+
+Example sub_2 : exp (sub (num 6) (num 7)) (fun _ => 0) = 0.
+Proof. reflexivity. Qed.
+
+Example div_1 : exp (div (num 10) (num 4)) (fun _ => 0) = 2.
+Proof. reflexivity. Qed.
+
+Example div_2 : exp (div (num 12) (num 0)) (fun _ => 0) = 0.
+Proof. reflexivity. Qed.
+
+
+(*EX2*)
+Fixpoint cond (c : Cond) (env : string -> nat) : bool :=
+  match c with
+  | base b => b
+  | bnot c' => negb (cond c' env)
+  | beq e1 e2 => Nat.eqb (exp e1 env) (exp e2 env)
+  | less e1 e2 => Nat.ltb (exp e1 env) (exp e2 env)
+  | bor c1 c2 => 
+      if cond c1 env then true
+      else cond c2 env
+  end.
+
+Example less_test : cond (less (num 10) (num 11)) (fun _ => 0) = true.
+Proof. reflexivity. Qed.
+
+Example bor_test : cond (bor (base false) (less (num 3) (num 3))) (fun _ => 0) = false.
+Proof. reflexivity. Qed.
+
+Example beq_test : cond (beq (num 10) (num 7)) (fun _ => 0) = false.
+Proof. reflexivity. Qed.
+
+
+(*EX3*)
+Inductive stmt : Stmt -> (string -> nat) -> (string -> nat) -> Prop :=
+  | E_Skip : forall env, stmt skip env env
+  | E_Assign : forall x e env env',
+      exp e env = env' x ->
+      stmt (assign x e) env env'
+  | E_Seq : forall s1 s2 env env' env'',
+      stmt s1 env env' ->
+      stmt s2 env' env'' ->
+      stmt (seq s1 s2) env env''
+  | E_Ite_True : forall c s1 s2 env env',
+      cond c env = true ->
+      stmt s1 env env' ->
+      stmt (ite c s1 s2) env env'
+  | E_Ite_False : forall c s1 s2 env env',
+      cond c env = false ->
+      stmt s2 env env' ->
+      stmt (ite c s1 s2) env env'
+  | E_It_True : forall c s env env',
+      cond c env = true ->
+      stmt s env env' ->
+      stmt (it c s) env env'
+  | E_It_False : forall c s env,
+      cond c env = false ->
+      stmt (it c s) env env
+  | E_DoWhile_True : forall s c env env' env'',
+      stmt s env env' ->
+      cond c env' = true ->
+      stmt (dowhile s c) env' env'' ->
+      stmt (dowhile s c) env env''
+  | E_DoWhile_False : forall s c env,
+      stmt s env env ->
+      cond c env = false ->
+      stmt (dowhile s c) env env.
+
+env = { "x" -> 6 }
+stmt (seq (assign "y" (num 4)) skip) env { "x" -> 6, "y" -> 4 }
+
+env = { "x" -> 6 }
+cond (less (num 4) (num 5)) env = true  
+stmt (seq (assign "y" (num 4)) (assign "z" (num 8))) env { "x" -> 6, "y" -> 4, "z" -> 8 }
+
+env = { "x" -> 6 }
+eval_stmt (assign "y" (num 4)) env { "x" -> 6, "y" -> 4 }  
+eval_cond (less (num 4) (num 5)) env = true  
+eval_stmt (dowhile (assign "y" (num 4)) (less (num 4) (num 5))) env { "x" -> 6, "y" -> 4 }
+eval_stmt (seq (assign "y" (num 4)) (assign "z" (num 8))) env { "x" -> 6, "y" -> 4, "z" -> 8 }
+
+
+  
