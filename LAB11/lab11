@@ -1,0 +1,124 @@
+(*EX1*)
+Require Import String.
+Require Import List.
+Import ListNotations.
+Open Scope string_scope.
+
+Inductive B :=
+| T : B
+| F : B
+| neg : B -> B
+| and : B -> B -> B
+| or  : B -> B -> B.
+
+Fixpoint interpret ( b : B ) : bool :=
+  match b with
+|T => true
+|F => false
+|neg a => negb (interpret a)
+|and a a' => (interpret a) && (interpret a')
+|or a a' => (interpret a) || (interpret a')
+end.
+
+Compute interpret (and F F).
+
+
+(*EX2*)
+Inductive Instruction :=
+| push : nat -> Instruction
+| inv : Instruction
+| add : Instruction
+| mul : Instruction.
+
+Fixpoint run_instruction 
+ (i : Instruction)
+ (stack : list nat) : list nat :=
+  match i with
+  | push n => match n with
+              | O => O :: stack
+              | S _ => (S O) :: stack
+              end
+
+  | inv => match stack with
+           | O :: stack' => (S O) :: stack'
+           | S O :: stack' => O :: stack'
+           | _ => stack
+           end
+
+  | add => match stack with
+           | x :: y :: stack' => (x + y) :: stack'
+           | _ => stack
+           end
+
+  | mul => match stack with
+           | x :: y :: stack' => (x * y) :: stack'
+           | _ => stack
+           end
+  end.
+
+Compute run_instruction inv [S O].
+
+
+(*EX3*)
+Fixpoint run_instructions
+         (stpgm : list Instruction)
+         (stack : list nat) : list nat :=
+
+  match stpgm with
+  | [] => stack 
+  | instr :: stack' => run_instructions stack' (run_instruction instr stack)
+  end.
+
+Compute run_instructions [push O; push (S O); add] [].
+Compute run_instructions [push O; push O;push (S O); push O] [].
+Compute run_instructions [push O; push O;push (S O); push O;mul] [].
+
+
+(*EX4*)
+Fixpoint compile (b : B) : list Instruction :=
+  match b with
+  | T => [push (S O)]
+  | F => [push O] 
+  | neg b' => compile b' ++ [inv]
+  | and b1 b2 => compile b1 ++ compile b2 ++ [mul] 
+  | or b1 b2 => compile b1 ++ compile b2 ++ [add] 
+  end.
+
+
+Fixpoint to_nat (b : B) : nat :=
+  match b with
+  | F => 0
+  | T => 1
+  | neg b' => 1 - to_nat b'
+  | and _ _ => 0 
+  | or _ _ => 0 
+  end.
+
+
+
+(*EX5*)
+Lemma soundness_helper:
+  forall b instrs stack,
+    run_instructions ((compile b) ++ instrs) stack =
+    run_instructions instrs (to_nat (if interpret b then T else F) :: stack).
+Proof.
+    intros b instrs stack.
+    induction b; simpl; try reflexivity.
+    (*Mai departe nu stiu*)
+Admitted.
+
+Theorem soundness :
+  forall b,
+    run_instructions (compile b) nil = [to_nat (if interpret b then T else F)].
+Proof.
+  intros b.
+  unfold compile.
+  destruct (interpret b) eqn:H; simpl.
+  - (*b = true*)
+    rewrite soundness_helper. 
+    (*Trebuia sa mearga soundness_helperu ca sa mearga soundness*)
+    reflexivity.
+  - (*b = false*)
+    rewrite soundness_helper.
+    reflexivity.
+Admitted.

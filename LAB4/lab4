@@ -6,7 +6,7 @@ Import ListNotations.
 (*EX1*)
 Inductive binar : Type :=
 | frunza : nat -> binar 
-| nod : binar  -> binar -> binar
+| nod : binar -> binar -> binar
 | vid : binar.
 
 (*EX2*)
@@ -24,7 +24,6 @@ Fixpoint height (n: binar) : nat :=
 | nod stanga dreapta => 1 + max(height stanga) (height dreapta)
 | vid => 0
   end.
-(*MERGE DOAR DACA ESTE ARBORE CU HEIGHT >= 1 ALTFEL TB LA FRUNZA _ => 1*)
 
 Definition arb: binar :=
 nod (frunza 3) (nod (frunza 2) (frunza 1)).
